@@ -1,7 +1,13 @@
 import { useMemo, useState, type FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useLoans, type LoanInput } from '../context/LoansContext'
-import { totalInterest, totalRepayment } from '../lib/calc'
+import {
+  annualInterestRate,
+  monthlyInterest,
+  monthlyInterestRate,
+  totalInterest,
+  totalRepayment,
+} from '../lib/calc'
 import { formatCurrency, toDateInputValue } from '../lib/format'
 import { ChevronLeftIcon, TrashIcon } from '../components/icons'
 import ConfirmDialog from '../components/ConfirmDialog'
@@ -10,7 +16,6 @@ interface FormState {
   nimi: string
   laenuSumma: string
   kestusKuudes: string
-  intressProtsent: string
   igakuineMakse: string
   algusKuupäev: string
   märkmed: string
@@ -32,7 +37,6 @@ export default function LoanForm() {
     nimi: existing?.nimi ?? '',
     laenuSumma: existing ? String(existing.laenuSumma) : '',
     kestusKuudes: existing ? String(existing.kestusKuudes) : '',
-    intressProtsent: existing ? String(existing.intressProtsent) : '',
     igakuineMakse: existing ? String(existing.igakuineMakse) : '',
     algusKuupäev: existing ? toDateInputValue(existing.algusKuupäev) : todayInput(),
     märkmed: existing?.märkmed ?? '',
@@ -40,30 +44,24 @@ export default function LoanForm() {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [showDelete, setShowDelete] = useState(false)
 
-  // Editing an id that doesn't exist.
-  if (editing && !existing) {
-    return (
-      <div className="animate-fade-in">
-        <p className="text-slate-300">Laenu ei leitud.</p>
-        <button className="btn-secondary mt-4" onClick={() => navigate('/')}>
-          Tagasi avalehele
-        </button>
-      </div>
-    )
-  }
-
   const num = (v: string) => {
     const n = Number(v.replace(',', '.'))
     return Number.isFinite(n) ? n : 0
   }
 
   const calc = useMemo(() => {
-    const igakuineMakse = num(form.igakuineMakse)
-    const kestusKuudes = num(form.kestusKuudes)
-    const laenuSumma = num(form.laenuSumma)
-    const repayment = totalRepayment({ igakuineMakse, kestusKuudes })
-    const interest = totalInterest({ igakuineMakse, kestusKuudes, laenuSumma })
-    return { repayment, interest }
+    const parts = {
+      igakuineMakse: num(form.igakuineMakse),
+      kestusKuudes: num(form.kestusKuudes),
+      laenuSumma: num(form.laenuSumma),
+    }
+    return {
+      repayment: totalRepayment(parts),
+      interest: totalInterest(parts),
+      monthlyInterest: monthlyInterest(parts),
+      annualRate: annualInterestRate(parts),
+      monthlyRate: monthlyInterestRate(parts),
+    }
   }, [form.igakuineMakse, form.kestusKuudes, form.laenuSumma])
 
   const set = (key: keyof FormState) => (e: { target: { value: string } }) =>
@@ -74,7 +72,6 @@ export default function LoanForm() {
     if (!form.nimi.trim()) next.nimi = 'Sisesta laenusaaja nimi.'
     if (num(form.laenuSumma) <= 0) next.laenuSumma = 'Sisesta kehtiv summa.'
     if (num(form.kestusKuudes) <= 0) next.kestusKuudes = 'Sisesta kestus kuudes.'
-    if (num(form.intressProtsent) < 0) next.intressProtsent = 'Intress ei saa olla negatiivne.'
     if (num(form.igakuineMakse) <= 0) next.igakuineMakse = 'Sisesta igakuine makse.'
     if (!form.algusKuupäev) next.algusKuupäev = 'Vali alguskuupäev.'
     setErrors(next)
@@ -85,12 +82,18 @@ export default function LoanForm() {
     e.preventDefault()
     if (!validate()) return
 
+    const laenuSumma = num(form.laenuSumma)
+    const kestusKuudes = Math.round(num(form.kestusKuudes))
+    const igakuineMakse = num(form.igakuineMakse)
+
     const payload: LoanInput = {
       nimi: form.nimi.trim(),
-      laenuSumma: num(form.laenuSumma),
-      kestusKuudes: Math.round(num(form.kestusKuudes)),
-      intressProtsent: num(form.intressProtsent),
-      igakuineMakse: num(form.igakuineMakse),
+      laenuSumma,
+      kestusKuudes,
+      // Annual interest rate is derived from the loan amount, duration and
+      // monthly payment rather than entered by hand.
+      intressProtsent: annualInterestRate({ laenuSumma, kestusKuudes, igakuineMakse }),
+      igakuineMakse,
       algusKuupäev: new Date(form.algusKuupäev).toISOString(),
       märkmed: form.märkmed.trim(),
     }
@@ -109,6 +112,18 @@ export default function LoanForm() {
       deleteLoan(id)
       navigate('/', { replace: true })
     }
+  }
+
+  // Editing an id that doesn't exist (e.g. after deletion).
+  if (editing && !existing) {
+    return (
+      <div className="animate-fade-in">
+        <p className="text-slate-300">Laenu ei leitud.</p>
+        <button className="btn-secondary mt-4" onClick={() => navigate('/')}>
+          Tagasi avalehele
+        </button>
+      </div>
+    )
   }
 
   return (
@@ -164,19 +179,6 @@ export default function LoanForm() {
             />
           </Field>
 
-          <Field label="Aastane intress (%)" error={errors.intressProtsent}>
-            <input
-              className="input"
-              type="number"
-              inputMode="decimal"
-              min="0"
-              step="0.1"
-              value={form.intressProtsent}
-              onChange={set('intressProtsent')}
-              placeholder="nt. 5"
-            />
-          </Field>
-
           <Field label="Igakuine makse (€)" error={errors.igakuineMakse}>
             <input
               className="input"
@@ -210,14 +212,31 @@ export default function LoanForm() {
         </Field>
 
         {/* Auto-calculated summary */}
-        <div className="card grid grid-cols-2 gap-3 bg-navy-light/40">
-          <div>
-            <p className="text-xs text-slate-400">Tagasimakse kokku</p>
-            <p className="text-lg font-bold text-slate-100">{formatCurrency(calc.repayment)}</p>
-          </div>
-          <div>
-            <p className="text-xs text-slate-400">Intressikulu kokku</p>
-            <p className="text-lg font-bold text-upcoming">{formatCurrency(calc.interest)}</p>
+        <div className="card bg-navy-light/40">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Automaatselt arvutatud
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <p className="text-xs text-slate-400">Tagasimakse kokku</p>
+              <p className="text-lg font-bold text-slate-100">{formatCurrency(calc.repayment)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-slate-400">Intressikulu kokku</p>
+              <p className="text-lg font-bold text-upcoming">{formatCurrency(calc.interest)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-slate-400">Aastane intress</p>
+              <p className="text-lg font-bold text-slate-100">
+                {calc.annualRate.toFixed(1)} %
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-slate-400">Kuine intress</p>
+              <p className="text-lg font-bold text-slate-100">
+                {calc.monthlyRate.toFixed(1)} % · {formatCurrency(calc.monthlyInterest)}
+              </p>
+            </div>
           </div>
         </div>
 

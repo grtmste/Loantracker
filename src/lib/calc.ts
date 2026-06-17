@@ -32,9 +32,35 @@ export function totalInterest(
   return Math.max(0, totalRepayment(loan) - loan.laenuSumma)
 }
 
-/** Remaining balance based on payments made. */
+/** Interest amount included in a single monthly payment. */
+export function monthlyInterest(
+  loan: Pick<Loan, 'igakuineMakse' | 'kestusKuudes' | 'laenuSumma'>,
+): number {
+  if (loan.kestusKuudes <= 0) return 0
+  return totalInterest(loan) / loan.kestusKuudes
+}
+
+/** Annual interest rate %, derived from the monthly payment and duration. */
+export function annualInterestRate(
+  loan: Pick<Loan, 'igakuineMakse' | 'kestusKuudes' | 'laenuSumma'>,
+): number {
+  if (loan.laenuSumma <= 0 || loan.kestusKuudes <= 0) return 0
+  return (totalInterest(loan) / loan.laenuSumma) * (12 / loan.kestusKuudes) * 100
+}
+
+/** Monthly interest rate % (annual rate / 12). */
+export function monthlyInterestRate(
+  loan: Pick<Loan, 'igakuineMakse' | 'kestusKuudes' | 'laenuSumma'>,
+): number {
+  return annualInterestRate(loan) / 12
+}
+
+/**
+ * Remaining balance = everything still owed (principal + interest), i.e. the
+ * payments not yet made. Interest-only payments do not reduce this.
+ */
 export function remainingBalance(loan: Loan): number {
-  return Math.max(0, loan.laenuSumma - loan.makstudMaksed * loan.igakuineMakse)
+  return Math.max(0, (loan.kestusKuudes - loan.makstudMaksed) * loan.igakuineMakse)
 }
 
 /** Number of payments still outstanding. */
@@ -53,8 +79,9 @@ export function nextPaymentDate(loan: Loan, now: Date = new Date()): Date | null
   if (isCompleted(loan)) return null
   const start = new Date(loan.algusKuupäev)
   if (Number.isNaN(start.getTime())) return null
-  // First payment is due one month after the start date.
-  return addMonths(start, loan.makstudMaksed + 1)
+  // First payment is due one month after the start date. Interest-only
+  // payments push the schedule forward by a month each.
+  return addMonths(start, loan.makstudMaksed + loan.intressiMaksed + 1)
 }
 
 /**

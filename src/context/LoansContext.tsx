@@ -3,7 +3,10 @@ import type { Loan } from '../types'
 import { getLoans, saveLoans, uuid } from '../lib/storage'
 import { isCompleted } from '../lib/calc'
 
-export type LoanInput = Omit<Loan, 'id' | 'makstudMaksed'> & { makstudMaksed?: number }
+export type LoanInput = Omit<Loan, 'id' | 'makstudMaksed' | 'intressiMaksed'> & {
+  makstudMaksed?: number
+  intressiMaksed?: number
+}
 
 interface LoansContextValue {
   loans: Loan[]
@@ -13,6 +16,8 @@ interface LoansContextValue {
   deleteLoan: (id: string) => void
   markPayment: (id: string) => void
   unmarkPayment: (id: string) => void
+  markInterestPayment: (id: string) => void
+  unmarkInterestPayment: (id: string) => void
 }
 
 const LoansContext = createContext<LoansContextValue | null>(null)
@@ -32,6 +37,7 @@ export function LoansProvider({ children }: { children: ReactNode }) {
         const loan: Loan = {
           id: uuid(),
           makstudMaksed: input.makstudMaksed ?? 0,
+          intressiMaksed: input.intressiMaksed ?? 0,
           ...input,
         }
         setLoans((prev) => [...prev, loan])
@@ -41,7 +47,12 @@ export function LoansProvider({ children }: { children: ReactNode }) {
         setLoans((prev) =>
           prev.map((l) =>
             l.id === id
-              ? { ...l, ...input, makstudMaksed: input.makstudMaksed ?? l.makstudMaksed }
+              ? {
+                  ...l,
+                  ...input,
+                  makstudMaksed: input.makstudMaksed ?? l.makstudMaksed,
+                  intressiMaksed: input.intressiMaksed ?? l.intressiMaksed,
+                }
               : l,
           ),
         )
@@ -62,6 +73,23 @@ export function LoansProvider({ children }: { children: ReactNode }) {
           prev.map((l) =>
             l.id === id && l.makstudMaksed > 0
               ? { ...l, makstudMaksed: l.makstudMaksed - 1 }
+              : l,
+          ),
+        )
+      },
+      markInterestPayment(id) {
+        setLoans((prev) =>
+          prev.map((l) => {
+            if (l.id !== id || isCompleted(l)) return l
+            return { ...l, intressiMaksed: l.intressiMaksed + 1 }
+          }),
+        )
+      },
+      unmarkInterestPayment(id) {
+        setLoans((prev) =>
+          prev.map((l) =>
+            l.id === id && l.intressiMaksed > 0
+              ? { ...l, intressiMaksed: l.intressiMaksed - 1 }
               : l,
           ),
         )

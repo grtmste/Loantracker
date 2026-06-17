@@ -6,6 +6,7 @@ import {
   daysOverdue,
   isCompleted,
   loanStatus,
+  monthlyInterest,
   nextPaymentDate,
   progress,
   remainingBalance,
@@ -26,8 +27,10 @@ const PROGRESS_COLOR: Record<string, string> = {
 export default function LoanDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { getLoan, markPayment, unmarkPayment } = useLoans()
+  const { getLoan, markPayment, unmarkPayment, markInterestPayment, unmarkInterestPayment } =
+    useLoans()
   const [showUndo, setShowUndo] = useState(false)
+  const [showUndoInterest, setShowUndoInterest] = useState(false)
 
   const loan = id ? getLoan(id) : undefined
 
@@ -48,6 +51,7 @@ export default function LoanDetail() {
   const monthsLeft = remainingMonths(loan)
   const next = nextPaymentDate(loan)
   const overdue = daysOverdue(loan)
+  const interestAmount = monthlyInterest(loan)
 
   const start = new Date(loan.algusKuupäev)
 
@@ -97,7 +101,7 @@ export default function LoanDetail() {
           value={next ? formatDate(next.toISOString()) : '—'}
         />
         <Stat label="Igakuine makse" value={formatCurrency(loan.igakuineMakse)} />
-        <Stat label="Aastane intress" value={`${loan.intressProtsent} %`} />
+        <Stat label="Aastane intress" value={`${loan.intressProtsent.toFixed(1)} %`} />
       </div>
 
       {/* Progress */}
@@ -112,7 +116,7 @@ export default function LoanDetail() {
       </div>
 
       {/* Mark payment */}
-      <div className="mb-5 flex gap-3">
+      <div className="mb-3 flex gap-3">
         <button
           type="button"
           className="btn-primary flex-1"
@@ -134,6 +138,37 @@ export default function LoanDetail() {
         )}
       </div>
 
+      {/* Interest-only payment: borrower paid only the interest this month */}
+      {!completed && interestAmount > 0 && (
+        <button
+          type="button"
+          className="btn-secondary mb-3 w-full"
+          onClick={() => markInterestPayment(loan.id)}
+        >
+          Märgi ainult intress makstuks ({formatCurrency(interestAmount)})
+        </button>
+      )}
+
+      {loan.intressiMaksed > 0 && (
+        <div className="mb-5 flex items-center justify-between rounded-xl border border-upcoming/30 bg-upcoming/5 px-4 py-3">
+          <div>
+            <p className="text-sm font-medium text-slate-200">
+              Intressimakseid: {loan.intressiMaksed}
+            </p>
+            <p className="text-xs text-slate-400">
+              kokku {formatCurrency(loan.intressiMaksed * interestAmount)} · pikendab graafikut
+            </p>
+          </div>
+          <button
+            type="button"
+            className="text-sm font-semibold text-slate-400 hover:text-slate-200"
+            onClick={() => setShowUndoInterest(true)}
+          >
+            Võta tagasi
+          </button>
+        </div>
+      )}
+
       {loan.märkmed && (
         <div className="card mb-5">
           <p className="mb-1 text-sm font-medium text-slate-300">Märkmed</p>
@@ -146,8 +181,9 @@ export default function LoanDetail() {
       <ol className="mb-6 space-y-2">
         {Array.from({ length: loan.kestusKuudes }).map((_, i) => {
           const monthNo = i + 1
-          const dueDate = addMonths(start, monthNo)
           const paid = i < loan.makstudMaksed
+          // Interest-only payments push the remaining (unpaid) due dates out.
+          const dueDate = addMonths(start, monthNo + (paid ? 0 : loan.intressiMaksed))
           const isNext = !paid && i === loan.makstudMaksed
           const isLate =
             isNext && overdue !== null && overdue > 0
@@ -224,6 +260,19 @@ export default function LoanDetail() {
           setShowUndo(false)
         }}
         onCancel={() => setShowUndo(false)}
+      />
+
+      <ConfirmDialog
+        open={showUndoInterest}
+        title="Võta intressimakse tagasi?"
+        message="Viimane märgitud intressimakse võetakse tagasi."
+        confirmLabel="Võta tagasi"
+        cancelLabel="Tühista"
+        onConfirm={() => {
+          unmarkInterestPayment(loan.id)
+          setShowUndoInterest(false)
+        }}
+        onCancel={() => setShowUndoInterest(false)}
       />
     </div>
   )

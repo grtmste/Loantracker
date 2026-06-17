@@ -35,7 +35,10 @@ export function setSession(active: boolean): void {
 export function getLoans(): Loan[] {
   try {
     const raw = localStorage.getItem(KEYS.loans)
-    return raw ? (JSON.parse(raw) as Loan[]) : []
+    if (!raw) return []
+    const parsed = JSON.parse(raw) as Loan[]
+    // Migrate loans saved before interest-only payments existed.
+    return parsed.map((loan) => ({ ...loan, intressiMaksed: loan.intressiMaksed ?? 0 }))
   } catch {
     return []
   }
