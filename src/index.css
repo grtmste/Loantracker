@@ -27,7 +27,7 @@ body {
 
 @layer components {
   .btn {
-    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl px-5 font-semibold transition-colors duration-150 active:scale-[0.98];
+    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl px-5 font-semibold transition-colors duration-150 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
   }
   .btn-primary {
     @apply btn bg-primary text-white hover:bg-blue-500;

@@ -9,15 +9,18 @@ export default function Login() {
   const [kasutajanimi, setKasutajanimi] = useState('')
   const [parool, setParool] = useState('')
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
   if (authenticated) {
     return <Navigate to="/" replace />
   }
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setError('')
-    const result = login(kasutajanimi, parool)
+    setLoading(true)
+    const result = await login(kasutajanimi, parool)
+    setLoading(false)
     if (result.ok) {
       navigate('/', { replace: true })
     } else {
@@ -71,8 +74,8 @@ export default function Login() {
             <p className="rounded-lg bg-overdue/10 px-3 py-2 text-sm text-overdue">{error}</p>
           )}
 
-          <button type="submit" className="btn-primary w-full">
-            Logi sisse
+          <button type="submit" className="btn-primary w-full" disabled={loading}>
+            {loading ? 'Kontrollin…' : 'Logi sisse'}
           </button>
         </form>
       </div>
