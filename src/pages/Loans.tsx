@@ -5,7 +5,8 @@ import { loanStatus } from '../lib/calc'
 import LoanCard from '../components/LoanCard'
 import EmptyState from '../components/EmptyState'
 import FloatingAddButton from '../components/FloatingAddButton'
-import { ListIcon, PlusIcon } from '../components/icons'
+import ConfirmDialog from '../components/ConfirmDialog'
+import { ListIcon, PlusIcon, TrashIcon } from '../components/icons'
 
 type Filter = 'koik' | 'kaesolev' | 'hilinenud' | 'lopetatud'
 
@@ -17,9 +18,10 @@ const FILTERS: { key: Filter; label: string }[] = [
 ]
 
 export default function Loans() {
-  const { loans } = useLoans()
+  const { loans, clearAll } = useLoans()
   const navigate = useNavigate()
   const [filter, setFilter] = useState<Filter>('koik')
+  const [showClear, setShowClear] = useState(false)
 
   const filtered = useMemo(() => {
     if (filter === 'koik') return loans
@@ -76,7 +78,32 @@ export default function Loans() {
         </div>
       )}
 
+      {loans.length > 0 && (
+        <div className="mt-10 border-t border-slate-800 pt-6">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Ohtlik tsoon
+          </p>
+          <button type="button" className="btn-danger w-full" onClick={() => setShowClear(true)}>
+            <TrashIcon className="h-5 w-5" />
+            Kustuta kõik andmed
+          </button>
+        </div>
+      )}
+
       <FloatingAddButton />
+
+      <ConfirmDialog
+        open={showClear}
+        title="Kustuta kõik andmed?"
+        message="See kustutab jäädavalt kõik laenud ja maksed. Seda tegevust ei saa tagasi võtta."
+        confirmLabel="Kustuta kõik"
+        cancelLabel="Tühista"
+        onConfirm={() => {
+          clearAll()
+          setShowClear(false)
+        }}
+        onCancel={() => setShowClear(false)}
+      />
     </div>
   )
 }

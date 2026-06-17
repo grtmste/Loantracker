@@ -18,6 +18,7 @@ interface LoansContextValue {
   unmarkPayment: (id: string) => void
   markInterestPayment: (id: string) => void
   unmarkInterestPayment: (id: string) => void
+  clearAll: () => void
 }
 
 const LoansContext = createContext<LoansContextValue | null>(null)
@@ -93,6 +94,9 @@ export function LoansProvider({ children }: { children: ReactNode }) {
               : l,
           ),
         )
+      },
+      clearAll() {
+        setLoans([])
       },
     }),
     [loans],

@@ -2,9 +2,9 @@ import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useLoans } from '../context/LoansContext'
 import {
-  daysOverdue,
   isCompleted,
   loanStatus,
+  nextPaymentDate,
   remainingBalance,
 } from '../lib/calc'
 import { formatCurrency } from '../lib/format'
@@ -34,10 +34,16 @@ export default function Dashboard() {
       if (loanStatus(loan, now) === 'hilinenud') {
         overdueCount += 1
       }
-      const overdue = daysOverdue(loan, now)
-      // Payments due (or already overdue) within the current calendar month window.
-      if (overdue !== null && overdue >= -31) {
-        expectedThisMonth += loan.igakuineMakse
+      // Count the next unpaid payment only if it falls in this calendar month
+      // (or earlier, i.e. overdue). A payment due next month is not expected yet.
+      const due = nextPaymentDate(loan, now)
+      if (due) {
+        const dueThisMonthOrEarlier =
+          due.getFullYear() < now.getFullYear() ||
+          (due.getFullYear() === now.getFullYear() && due.getMonth() <= now.getMonth())
+        if (dueThisMonthOrEarlier) {
+          expectedThisMonth += loan.igakuineMakse
+        }
       }
     }
 
