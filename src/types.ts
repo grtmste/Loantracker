@@ -12,8 +12,3 @@ export interface Loan {
 }
 
 export type LoanStatus = 'kaesolev' | 'hilinenud' | 'lopetatud'
-
-export interface Account {
-  kasutajanimi: string
-  parool: string
-}

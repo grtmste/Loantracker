@@ -4,9 +4,8 @@ import { useAuth } from '../context/AuthContext'
 import { WalletIcon } from '../components/icons'
 
 export default function Login() {
-  const { authenticated, hasAccount, login, register } = useAuth()
+  const { authenticated, login } = useAuth()
   const navigate = useNavigate()
-  const [mode, setMode] = useState<'login' | 'register'>(hasAccount ? 'login' : 'register')
   const [kasutajanimi, setKasutajanimi] = useState('')
   const [parool, setParool] = useState('')
   const [error, setError] = useState('')
@@ -18,8 +17,7 @@ export default function Login() {
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
     setError('')
-    const result =
-      mode === 'register' ? register(kasutajanimi, parool) : login(kasutajanimi, parool)
+    const result = login(kasutajanimi, parool)
     if (result.ok) {
       navigate('/', { replace: true })
     } else {
@@ -35,11 +33,7 @@ export default function Login() {
             <WalletIcon className="h-8 w-8" />
           </span>
           <h1 className="text-3xl font-extrabold tracking-tight text-slate-100">Laenuhai</h1>
-          <p className="mt-1 text-sm text-slate-400">
-            {mode === 'register'
-              ? 'Loo konto, et alustada laenude jälgimist'
-              : 'Logi sisse, et jätkata'}
-          </p>
+          <p className="mt-1 text-sm text-slate-400">Logi sisse, et jätkata</p>
         </div>
 
         <form onSubmit={handleSubmit} className="card flex flex-col gap-4">
@@ -66,7 +60,7 @@ export default function Login() {
               id="parool"
               className="input"
               type="password"
-              autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
+              autoComplete="current-password"
               value={parool}
               onChange={(e) => setParool(e.target.value)}
               placeholder="••••••••"
@@ -78,39 +72,9 @@ export default function Login() {
           )}
 
           <button type="submit" className="btn-primary w-full">
-            {mode === 'register' ? 'Loo konto' : 'Logi sisse'}
+            Logi sisse
           </button>
         </form>
-
-        <div className="mt-5 text-center text-sm text-slate-400">
-          {mode === 'login' ? (
-            !hasAccount && (
-              <button
-                type="button"
-                className="font-semibold text-primary hover:underline"
-                onClick={() => {
-                  setMode('register')
-                  setError('')
-                }}
-              >
-                Loo konto
-              </button>
-            )
-          ) : (
-            hasAccount && (
-              <button
-                type="button"
-                className="font-semibold text-primary hover:underline"
-                onClick={() => {
-                  setMode('login')
-                  setError('')
-                }}
-              >
-                Mul on juba konto — logi sisse
-              </button>
-            )
-          )}
-        </div>
       </div>
     </div>
   )
