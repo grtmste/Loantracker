@@ -55,6 +55,20 @@ export function monthlyInterestRate(
   return annualInterestRate(loan) / 12
 }
 
+/** Daily interest amount, based on the monthly interest spread over 30 days. */
+export function dailyInterest(
+  loan: Pick<Loan, 'igakuineMakse' | 'kestusKuudes' | 'laenuSumma'>,
+): number {
+  return monthlyInterest(loan) / 30
+}
+
+/** Daily interest rate % (monthly rate / 30). */
+export function dailyInterestRate(
+  loan: Pick<Loan, 'igakuineMakse' | 'kestusKuudes' | 'laenuSumma'>,
+): number {
+  return monthlyInterestRate(loan) / 30
+}
+
 /**
  * Remaining balance = everything still owed (principal + interest), i.e. the
  * payments not yet made. Interest-only payments do not reduce this.

@@ -3,6 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useLoans, type LoanInput } from '../context/LoansContext'
 import {
   annualInterestRate,
+  dailyInterest,
+  dailyInterestRate,
   monthlyInterest,
   monthlyInterestRate,
   totalInterest,
@@ -61,6 +63,8 @@ export default function LoanForm() {
       monthlyInterest: monthlyInterest(parts),
       annualRate: annualInterestRate(parts),
       monthlyRate: monthlyInterestRate(parts),
+      dailyInterest: dailyInterest(parts),
+      dailyRate: dailyInterestRate(parts),
     }
   }, [form.igakuineMakse, form.kestusKuudes, form.laenuSumma])
 
@@ -235,6 +239,12 @@ export default function LoanForm() {
               <p className="text-xs text-slate-400">Kuine intress</p>
               <p className="text-lg font-bold text-slate-100">
                 {calc.monthlyRate.toFixed(1)} % · {formatCurrency(calc.monthlyInterest)}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-slate-400">Päevane intress</p>
+              <p className="text-lg font-bold text-slate-100">
+                {calc.dailyRate.toFixed(2)} % · {formatCurrency(calc.dailyInterest)}
               </p>
             </div>
           </div>
