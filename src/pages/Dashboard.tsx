@@ -11,6 +11,7 @@ import { formatCurrency } from '../lib/format'
 import SummaryCard from '../components/SummaryCard'
 import LoanCard from '../components/LoanCard'
 import EmptyState from '../components/EmptyState'
+import FloatingAddButton from '../components/FloatingAddButton'
 import { AlertIcon, CalendarIcon, CoinsIcon, PlusIcon, WalletIcon } from '../components/icons'
 
 export default function Dashboard() {
@@ -105,14 +106,7 @@ export default function Dashboard() {
       )}
 
       {/* Floating add button */}
-      <button
-        type="button"
-        onClick={() => navigate('/laen/uus')}
-        aria-label="Lisa laen"
-        className="fixed bottom-20 right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-xl shadow-primary/40 transition-transform hover:bg-blue-500 active:scale-95 lg:bottom-8 lg:right-8 lg:h-16 lg:w-16"
-      >
-        <PlusIcon className="h-7 w-7" />
-      </button>
+      <FloatingAddButton />
     </div>
   )
 }
