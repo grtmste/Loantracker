@@ -4,9 +4,12 @@ import { useLoans } from '../context/LoansContext'
 import {
   addMonths,
   daysOverdue,
+  dailyInterest,
+  dailyInterestRate,
   isCompleted,
   loanStatus,
   monthlyInterest,
+  monthlyInterestRate,
   nextPaymentDate,
   progress,
   remainingBalance,
@@ -102,6 +105,14 @@ export default function LoanDetail() {
         />
         <Stat label="Igakuine makse" value={formatCurrency(loan.igakuineMakse)} />
         <Stat label="Aastane intress" value={`${loan.intressProtsent.toFixed(1)} %`} />
+        <Stat
+          label="Kuine intress"
+          value={`${monthlyInterestRate(loan).toFixed(1)} % · ${formatCurrency(monthlyInterest(loan))}`}
+        />
+        <Stat
+          label="Päevane intress"
+          value={`${dailyInterestRate(loan).toFixed(2)} % · ${formatCurrency(dailyInterest(loan))}`}
+        />
       </div>
 
       {/* Progress */}

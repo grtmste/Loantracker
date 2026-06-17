@@ -4,7 +4,6 @@ import { useLoans } from '../context/LoansContext'
 import { loanStatus } from '../lib/calc'
 import LoanCard from '../components/LoanCard'
 import EmptyState from '../components/EmptyState'
-import FloatingAddButton from '../components/FloatingAddButton'
 import ConfirmDialog from '../components/ConfirmDialog'
 import { ListIcon, PlusIcon, TrashIcon } from '../components/icons'
 
@@ -89,8 +88,6 @@ export default function Loans() {
           </button>
         </div>
       )}
-
-      <FloatingAddButton />
 
       <ConfirmDialog
         open={showClear}

@@ -11,7 +11,6 @@ import { formatCurrency } from '../lib/format'
 import SummaryCard from '../components/SummaryCard'
 import LoanCard from '../components/LoanCard'
 import EmptyState from '../components/EmptyState'
-import FloatingAddButton from '../components/FloatingAddButton'
 import { AlertIcon, CalendarIcon, CoinsIcon, PlusIcon, WalletIcon } from '../components/icons'
 
 export default function Dashboard() {
@@ -110,9 +109,6 @@ export default function Dashboard() {
           ))}
         </div>
       )}
-
-      {/* Floating add button */}
-      <FloatingAddButton />
     </div>
   )
 }

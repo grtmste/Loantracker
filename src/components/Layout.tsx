@@ -1,6 +1,6 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { BellIcon, HomeIcon, ListIcon, LogoutIcon } from './icons'
+import { BellIcon, HomeIcon, ListIcon, LogoutIcon, PlusIcon } from './icons'
 
 const NAV_ITEMS = [
   { to: '/', label: 'Avaleht', icon: HomeIcon, end: true },
@@ -27,6 +27,14 @@ export default function Layout() {
           </span>
           <span className="text-xl font-extrabold tracking-tight text-slate-100">Laenuhai</span>
         </div>
+        <button
+          type="button"
+          onClick={() => navigate('/laen/uus')}
+          className="btn-primary mb-4 w-full"
+        >
+          <PlusIcon className="h-5 w-5" />
+          Lisa laen
+        </button>
         <nav className="flex flex-1 flex-col gap-1">
           {NAV_ITEMS.map(({ to, label, icon: Icon, end }) => (
             <NavLink
@@ -81,9 +89,36 @@ export default function Layout() {
         </main>
       </div>
 
-      {/* Mobile bottom navigation */}
-      <nav className="safe-bottom fixed inset-x-0 bottom-0 z-30 grid grid-cols-3 border-t border-slate-800 bg-navy/95 backdrop-blur lg:hidden">
-        {NAV_ITEMS.map(({ to, label, icon: Icon, end }) => (
+      {/* Mobile bottom navigation with a centered add button */}
+      <nav className="safe-bottom fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-slate-800 bg-navy/95 backdrop-blur lg:hidden">
+        {NAV_ITEMS.slice(0, 2).map(({ to, label, icon: Icon, end }) => (
+          <NavLink
+            key={to}
+            to={to}
+            end={end}
+            className={({ isActive }) =>
+              `flex min-h-[56px] flex-col items-center justify-center gap-1 text-xs font-medium transition-colors ${
+                isActive ? 'text-primary' : 'text-slate-400'
+              }`
+            }
+          >
+            <Icon className="h-6 w-6" />
+            {label}
+          </NavLink>
+        ))}
+
+        <button
+          type="button"
+          onClick={() => navigate('/laen/uus')}
+          aria-label="Lisa laen"
+          className="flex min-h-[56px] flex-col items-center justify-center"
+        >
+          <span className="-mt-5 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-white shadow-lg shadow-primary/40 transition-transform active:scale-95">
+            <PlusIcon className="h-6 w-6" />
+          </span>
+        </button>
+
+        {NAV_ITEMS.slice(2).map(({ to, label, icon: Icon, end }) => (
           <NavLink
             key={to}
             to={to}
