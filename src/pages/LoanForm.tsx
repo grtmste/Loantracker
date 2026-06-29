@@ -2,6 +2,7 @@ import { useMemo, useState, type FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useLoans, type LoanInput } from '../context/LoansContext'
 import {
+  addMonths,
   annualInterestRate,
   dailyInterest,
   dailyInterestRate,
@@ -10,7 +11,7 @@ import {
   totalInterest,
   totalRepayment,
 } from '../lib/calc'
-import { formatCurrency, toDateInputValue } from '../lib/format'
+import { formatCurrency, formatDate, toDateInputValue } from '../lib/format'
 import { ChevronLeftIcon, TrashIcon } from '../components/icons'
 import ConfirmDialog from '../components/ConfirmDialog'
 
@@ -204,6 +205,16 @@ export default function LoanForm() {
             value={form.algusKuupäev}
             onChange={set('algusKuupäev')}
           />
+          {form.algusKuupäev && (
+            <p className="mt-1.5 text-xs text-slate-500">
+              Esimene makse tähtaeg:{' '}
+              <span className="text-slate-400">
+                {formatDate(addMonths(new Date(form.algusKuupäev), 1).toISOString())}
+              </span>
+              . Intress arvestatakse alguskuupäevast — tulevikus oleva kuupäeva korral algavad
+              maksed alles siis.
+            </p>
+          )}
         </Field>
 
         <Field label="Märkmed">

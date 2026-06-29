@@ -151,13 +151,19 @@ export default function LoanDetail() {
 
       {/* Interest-only payment: borrower paid only the interest this month */}
       {!completed && interestAmount > 0 && (
-        <button
-          type="button"
-          className="btn-secondary mb-3 w-full"
-          onClick={() => markInterestPayment(loan.id)}
-        >
-          Märgi ainult intress makstuks ({formatCurrency(interestAmount)})
-        </button>
+        <>
+          <button
+            type="button"
+            className="btn-secondary mb-1.5 w-full"
+            onClick={() => markInterestPayment(loan.id)}
+          >
+            Märgi ainult intress makstuks ({formatCurrency(interestAmount)})
+          </button>
+          <p className="mb-3 px-1 text-xs text-slate-500">
+            Kasuta, kui laenusaaja maksab sel kuul ainult intressi. Nihutab järgmise makse
+            tähtaega kuu võrra edasi, kuid ei vähenda laenu jääki ega kestust.
+          </p>
+        </>
       )}
 
       {loan.intressiMaksed > 0 && (
